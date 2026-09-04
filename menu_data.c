@@ -16,7 +16,7 @@
 
 static const char * const bandOptions[] =
 {
-    "80M", "40M", "30M", "20M", "17M", "15M", "12M", "10M"
+    "40M", "30M", "20M", "17M", "15M"
 };
 
 static const char * const modeOptions[] =
@@ -26,7 +26,40 @@ static const char * const modeOptions[] =
 
 static const char * const keyerOptions[] =
 {
-    "IAMBIC-A", "IAMBIC-B", "STRAIGHT"
+    "IAMBIC-A", "IAMBIC-B", "ULTIMATIC"
+};
+
+static const char * const filterOptions[] =
+{
+    "WIDE", "NARROW"
+};
+static const char * const rateOptions[] =
+{
+    "10", "100", "1K", "10K"
+};
+static const char * const spotOptions[] =
+{
+    "OFF", "ON"
+};
+static const char * const muteOptions[] =
+{
+    "OFF", "ON"
+};
+static const char * const playMemOptions[] =
+{
+    "PLAY MEM 1", "PLAY MEM 2", "PLAY MEM"
+};
+static const char * const recMemOptions[] =
+{
+    "RECORD MEM 1", "RECORD MEM 2", "RECORD MEM"
+};
+static const char * const paddleOrientOptions[] =
+{
+    "NORMAL", "REVERSE"
+};
+static const char * const audioOptions[] =
+{
+    "MONAURAL", "BINAURAL"
 };
 
 /* ------------------------------------------------------------------ */
@@ -42,46 +75,143 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
 {
     /* index 0 */
     {
-        .label = "WPM",
-        .ledIndex = 0,
-        .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = 5, .maxValue = 40, .step = 1,
-                        .defaultValue = 20, .unitSuffix = "" }
-    },
-    /* index 1 */
-    {
         .label = "BAND",
-        .ledIndex = 1,
+        .ledIndex = 0,
         .type = MENU_TYPE_LIST,
         .def.list = { .options = bandOptions,
                        .numOptions = sizeof(bandOptions)/sizeof(bandOptions[0]),
                        .defaultIndex = 1 /* "40M" */ }
     },
+    /* index 1 */
+    {
+        .label = "RATE",
+        .ledIndex = 1,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = rateOptions,
+                       .numOptions = sizeof(rateOptions)/sizeof(rateOptions[0]),
+                       .defaultIndex = 2 /* "1K" */ }
+    },
+
     /* index 2 */
     {
-        .label = "MODE",
+        .label = "FILTER",
         .ledIndex = 2,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = filterOptions,
+                       .numOptions = sizeof(filterOptions)/sizeof(filterOptions[0]),
+                       .defaultIndex = 0 }
+    },
+    /* index 3 */
+    {
+        .label = "SPOT",
+        .ledIndex = 3,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = spotOptions,
+                       .numOptions = sizeof(spotOptions)/sizeof(spotOptions[0]),
+                       .defaultIndex = 0 }
+    },
+    /* index 4 */
+    {
+        .label = "MUTE",
+        .ledIndex = 4,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = muteOptions,
+                       .numOptions = sizeof(muteOptions)/sizeof(muteOptions[0]),
+                       .defaultIndex = 0 }
+    },
+    /* index 5 */
+    {
+        .label = "MODE",
+        .ledIndex = 5,
         .type = MENU_TYPE_LIST,
         .def.list = { .options = modeOptions,
                        .numOptions = sizeof(modeOptions)/sizeof(modeOptions[0]),
                        .defaultIndex = 0 }
     },
-    /* index 3 */
+    /* index 6 */
     {
-        .label = "KEYER",
-        .ledIndex = 3,
+        .label = "PLAY MEM",
+        .ledIndex = 6,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = playMemOptions,
+                       .numOptions = sizeof(playMemOptions)/sizeof(playMemOptions[0]),
+                       .defaultIndex = 0 }
+    },
+    /* index 7 */
+    {
+        .label = "RECORD MEM",
+        .ledIndex = 7,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = recMemOptions,
+                       .numOptions = sizeof(recMemOptions)/sizeof(recMemOptions[0]),
+                       .defaultIndex = 0 }
+    },
+    /* index 8 */
+    {
+        .label = "WPM",
+        .ledIndex = 8,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = 5, .maxValue = 30, .step = 1,
+                        .defaultValue = 20, .unitSuffix = "" }
+    },
+    /* index 9 */
+    {
+        .label = "PADDLE ORIENT",
+        .ledIndex = 9,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = paddleOrientOptions,
+                       .numOptions = sizeof(paddleOrientOptions)/sizeof(paddleOrientOptions[0]),
+                       .defaultIndex = 1 }
+    },
+    /* index 10 */
+    {
+        .label = "KEYER MODE",
+        .ledIndex = 10,
         .type = MENU_TYPE_LIST,
         .def.list = { .options = keyerOptions,
                        .numOptions = sizeof(keyerOptions)/sizeof(keyerOptions[0]),
+                       .defaultIndex = 2 }
+    },
+    /* index 11 */
+    {
+        .label = "QSK",
+        .ledIndex = 11,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = 5, .maxValue = 800, .step = 1,
+                        .defaultValue = 150, .unitSuffix = "ms" }
+    },
+    /* index 12 */
+    {
+        .label = "AUDIO MODE",
+        .ledIndex = 12,
+        .type = MENU_TYPE_LIST,
+        .def.list = { .options = audioOptions,
+                       .numOptions = sizeof(audioOptions)/sizeof(audioOptions[0]),
                        .defaultIndex = 0 }
     },
-    /* index 4 */
+    /* index 13 */
     {
-        .label = "RF PWR",
-        .ledIndex = 4,
+        .label = "VOLTAGE",
+        .ledIndex = 13,
         .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = 1, .maxValue = 5, .step = 1,
-                        .defaultValue = 5, .unitSuffix = "W" }
+        .def.range = { .minValue = 5, .maxValue = 5, .step = 0,
+                        .defaultValue = 5, .unitSuffix = "V" }
+    },
+    /* index 14 */
+    {
+        .label = "XIT",
+        .ledIndex = 14,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "Hz" }
+    },
+    /* index 15 */
+    {
+        .label = "RIT",
+        .ledIndex = 15,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "Hz" }
     },
 
     /* ---- fill in the remaining 19 items the same way ---- */
