@@ -28,7 +28,7 @@ int main(void) {
     initGPIO();
 
     init_spi_shift_register(); // Hardware setup from the previous step
-    init_switch_s1s2();          // S1 and S2 and Timer_A3 debounce setup
+    init_switch();          // encoder Timer_A3 debounce setup
 
     while (1)
     {
@@ -65,59 +65,13 @@ void send_byte_to_shift_register(uint8_t data)
     while (EUSCI_B_SPI_isBusy(EUSCI_B0_BASE));
 
     // Pulse the P1.7 Latch pin (RCLK) to push data to the 74HCT595 parallel physical pins
-    GPIO_setOutputHighOnPin(LATCH_PORT, LATCH_PIN);
+    GPIO_setOutputHighOnPin(SHIFTER_LATCH);
     __delay_cycles(10); // Small delay to satisfy 74HCT595 timing minimums
-    GPIO_setOutputLowOnPin(LATCH_PORT, LATCH_PIN);
+    GPIO_setOutputLowOnPin(SHIFTER_LATCH);
 }
 
 
 
-// -------------------------------------------------------------------------
-// PORT 4 INTERRUPT SERVICE ROUTINE (Initial Button Edge Detection)
-// -------------------------------------------------------------------------
-#pragma vector=PORT4_VECTOR
-__interrupt void Port_4_ISR(void)
-{
-    // Check if the interrupt was caused by the P4.0 switch pin
-    if (GPIO_getInterruptStatus(GPIO_PORT_P4, GPIO_PIN0) == GPIO_PIN0)
-    {
-        // Temporarily disable the P4.0 interrupt to shield against mechanical bounce noise
-        GPIO_disableInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-        GPIO_clearInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-
-        // Clear and restart Timer_A3 to begin the 15ms verification window
-        Timer_A_clearTimerInterrupt(TIMER_A3_BASE);
-        Timer_A_startCounter(TIMER_A3_BASE, TIMER_A_UP_MODE);
-    }
-}
-
-// -------------------------------------------------------------------------
-// TIMER_A3 CCR0 INTERRUPT SERVICE ROUTINE (Debounce Verification)
-// -------------------------------------------------------------------------
-#pragma vector=TIMER3_A0_VECTOR
-__interrupt void Timer_A3_CCR0_ISR(void)
-{
-    // Halt Timer_A3 since our verification check is happening now
-    Timer_A_stop(TIMER_A3_BASE);
-    Timer_A_clear(TIMER_A3_BASE);
-
-    // Sample the pin. If it remains LOW (0), it is a stable, intended press.
-    if (GPIO_getInputPinValue(GPIO_PORT_P4, GPIO_PIN0) == GPIO_INPUT_PIN_LOW)
-    {
-        button_pressed_flag = 1; // Mark event for main program loop
-    }
-    else if (GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN3) == GPIO_INPUT_PIN_LOW)
-    {
-        button_pressed_flag = 1; // Mark event for main program loop
-    }
-
-    // Clear residual bounce noise, then re-arm the pin edge interrupt
-    GPIO_clearInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-    GPIO_enableInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN3);
-    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN3);
-
-}
 
 
 
