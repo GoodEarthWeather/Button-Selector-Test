@@ -66,29 +66,21 @@ void lcdWriteCmd(unsigned char cmd) {
     else
         delay_us(50);
 }
-void lcdSetText(char* text, int x, int y) {
-	uint8_t i;
-	if (x < 16) {
-		x |= 0x80; // Set LCD for first line write
-		switch (y){
-		case 1:
-			x |= 0x40; // Set LCD for second line write
-			break;
-		}
-		lcdWriteCmd(x);
-	}
-	i = 0;
-
-	while (text[i] != '\0') {
-		lcdWriteData(text[i]);
-		i++;
-	}
+void lcdSetText(char* text, int x) {
+    uint8_t i;
+    x |= 0x80; // set bit 7 to indicate a command
+    lcdWriteCmd(x);
+    i = 0;  // now send character data
+    while (text[i] != '\0') {
+        lcdWriteData(text[i]);
+        i++;
+    }
 }
 
 void lcdSetInt(uint32_t val, int x, int y){
 	char *result;
 	result = number_to_string(val);
-	lcdSetText(result, x, y);
+	lcdSetText(result, x);
 }
 
 void lcdClear() {
@@ -122,6 +114,7 @@ char *number_to_string(uint32_t number)
 }
 
 // routine to move cursor for frequency readout; always on line 1
+//
 void moveFreqCursor(void)
 {
     uint8_t address;
@@ -129,31 +122,31 @@ void moveFreqCursor(void)
     extern uint8_t selectedBand;
 
     switch (freqMultiplier) {
-    case 1 :
-        address = 0x08;
-        break;
     case 10 :
-        address = 0x07;
+        address = CURSOR_10;
         break;
     case 100 :
-        address = 0x06;
+        address = CURSOR_100;
         break;
     case 1000 :
-        address = 0x04;
+        address = CURSOR_1K;
         break;
     case 10000 :
-        address = 0x03;
+        address = CURSOR_10K;
         break;
     default:
-        address = 0x08;
+        address = CURSOR_100;
         break;
     }
-    if ( selectedBand != BAND_40M )
-        address++;
+    if ( selectedBand == BAND_40M )
+        address--;
 
     lcdWriteCmd(MOVE_CURSOR + address);
 }
-
+/*****************
+ * All functions above are the low level LCD routines
+ *
+ */
 // routine to display frequency
 void updateDisplay(uint8_t field)
 {
@@ -220,19 +213,19 @@ void updateDisplay(uint8_t field)
         switch (selectedBand)
         {
         case  BAND_40M :
-            lcdSetText("40M",0xD,0);  // put band info at position 13 (0xD) on first row
+            lcdSetText("40M",BAND_FIELD);  // put band info at position 13 (0xD) on first row
             break;
         case  BAND_30M :
-            lcdSetText("30M",0xD,0);  // put band info at position 13 (0xD) on first row
+            lcdSetText("30M",BAND_FIELD);  // put band info at position 13 (0xD) on first row
             break;
         case  BAND_20M :
-            lcdSetText("20M",0xD,0);  // put band info at position 13 (0xD) on first row
+            lcdSetText("20M",BAND_FIELD);  // put band info at position 13 (0xD) on first row
             break;
         case  BAND_17M :
-            lcdSetText("17M",0xD,0);  // put band info at position 13 (0xD) on first row
+            lcdSetText("17M",BAND_FIELD);  // put band info at position 13 (0xD) on first row
             break;
         case  BAND_15M :
-            lcdSetText("15M",0xD,0);  // put band info at position 13 (0xD) on first row
+            lcdSetText("15M",BAND_FIELD);  // put band info at position 13 (0xD) on first row
             break;
         default :
             break;

@@ -15,8 +15,9 @@
 // Define all I/O
 
 
-uint8_t menuEncoderCWCount, menuEncoderCCWCount;
-uint8_t optionEncoderCWCount, optionEncoderCCWCount;
+int8_t menuEncoderCWCount, menuEncoderCCWCount;
+int8_t optionEncoderCWCount, optionEncoderCCWCount;
+
 
 // Track valid button press states globally
 volatile uint8_t button_pressed_flag = 0;
@@ -39,14 +40,6 @@ int main(void) {
         case BTN_PRESSED_OPTION_ENCODER_SWITCH :
             break;
         case BTN_PRESSED_MENU_ENCODER :
-            if (GPIO_getInputPinValue(MENU_ENCODER_A) != GPIO_getInputPinValue(MENU_ENCODER_B))
-            {
-                menuEncoderCWCount++;
-            } else {
-                menuEncoderCCWCount++;
-            }
-            // now toggle interrupt edge
-            P2IES ^= BIT1;
             break;
         case BTN_PRESSED_OPTION_ENCODER :
             if (GPIO_getInputPinValue(OPTION_ENCODER_A) != GPIO_getInputPinValue(OPTION_ENCODER_B))
@@ -69,24 +62,66 @@ int main(void) {
     }
 }
 
-void send_byte_to_shift_register(uint8_t data)
+/*
+ * This routine will handle response to the menu encoder being rotated.
+ */
+void handle_menu_encoder(void)
 {
-    // Wait until the hardware transmit buffer is empty and ready
-    while (!EUSCI_B_SPI_getInterruptStatus(EUSCI_B0_BASE, EUSCI_B_SPI_TRANSMIT_INTERRUPT));
+    uint8_t led_index;
 
-    // Send the byte into the hardware buffer (it will auto-shift out 8 bits in the background)
-    EUSCI_B_SPI_transmitData(EUSCI_B0_BASE, data);
+    // toggle interrupt edge - for encoder detection
+    P2IES ^= BIT1;
+    if (GPIO_getInputPinValue(MENU_ENCODER_A) != GPIO_getInputPinValue(MENU_ENCODER_B))
+    {
+        Menu_SelectMove(menuEncoderCWCount++);
+    } else {
+        Menu_SelectMove(menuEncoderCCWCount++);
+    }
+    // menuSelectedIndex now contains the index to the new selected menu
+    // now get led index associated with the new menu index
+    led_index = Menu_GetSelectedLedIndex(void);
+    // now send this to the LED shifter to update the LEDs
+    updateLEDShifter(led_index);
+    // now update LCD to match selected menu
 
-    // Block until the shift register inside the eUSCI_B0 completely finishes serialization
-    while (EUSCI_B_SPI_isBusy(EUSCI_B0_BASE));
 
-    // Pulse the P1.7 Latch pin (RCLK) to push data to the 74HCT595 parallel physical pins
-    GPIO_setOutputHighOnPin(SHIFTER_LATCH);
-    __delay_cycles(10); // Small delay to satisfy 74HCT595 timing minimums
-    GPIO_setOutputLowOnPin(SHIFTER_LATCH);
+
 }
 
+// This routine will update menu LEDs
+// Sends '3' bytes out to a chain of cascaded 74HCT595s and latches once.
+// data[2] = byte for the FIRST chip in the chain (closest to MCU, SER pin)
+// data[1] = byte for the SECOND chip
+// data[0] = byte for the THIRD chip
+// (byte order is reversed internally since the chain shifts "backwards")
+void updateLEDShifter( uint8_t index)
+{
+    uint8_t i;
+    uint8_t data[3];
+    uint32_t selectedLED;
 
+    selectedLED = (1 << index);  // convert number to bit
+    selectedLED = ~selectedLED;  // invert all bits to match HW implementation of turning on LED
+    // construct bytes to send
+    data[2] = (uint8_t)(selectedLED & 0x000000FF);
+    data[1] = (uint8_t)((selectedLED >> 8) & 0x000000FF);
+    data[0] = (uint8_t)((selectedLED >> 16) & 0x000000FF);
+
+    // Send last chip's byte first, first chip's byte last
+    for (i = 0; i < 3; i++)
+    {
+        while (!EUSCI_B_SPI_getInterruptStatus(EUSCI_B0_BASE, EUSCI_B_SPI_TRANSMIT_INTERRUPT));
+        EUSCI_B_SPI_transmitData(EUSCI_B0_BASE, data[i]);
+    }
+
+    // Wait for the last byte to fully clock out before latching
+    while (EUSCI_B_SPI_isBusy(EUSCI_B0_BASE));
+
+    // Latch all 24 bits to the outputs simultaneously
+    GPIO_setOutputHighOnPin(SHIFTER_LATCH);
+    __delay_cycles(10);
+    GPIO_setOutputLowOnPin(SHIFTER_LATCH);
+}
 
 
 

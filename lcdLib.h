@@ -40,7 +40,7 @@ by: Elliott Gurrola
 
 
 Modified on: Apr 15, 2013
-by: Luiz (Luis Carlos Bañuelos-Chacon)
+by: Luiz (Luis Carlos Baï¿½uelos-Chacon)
 
 Modified on: May 24, 2013
 by: Elias N Jaquez
@@ -50,7 +50,6 @@ by: Elias N Jaquez
 #define LCDLIB_H_
 
 #include <string.h>
-#include <stdio.h>
 #include "main.h"
 
 // Delay Functions
@@ -59,24 +58,22 @@ by: Elias N Jaquez
 #define delay_us(x)		__delay_cycles((long) x * 8)
 
 // Pins
-#define EN		BIT4
-#define RS		BIT5
-#define DATA	0x0F
 
 #define MOVE_CURSOR_LEFT 0x10
 #define MOVE_CURSOR_RIGHT 0x14
 #define MOVE_CURSOR 0x80   // add address to this for move cursor command
 
-#define LCD_D4 GPIO_PORT_P1, GPIO_PIN7
-#define LCD_D5 GPIO_PORT_P4, GPIO_PIN3
-#define LCD_D6 GPIO_PORT_P4, GPIO_PIN4
-#define LCD_D7 GPIO_PORT_P5, GPIO_PIN3
-#define LCD_RS GPIO_PORT_P1, GPIO_PIN5
-#define LCD_CLK GPIO_PORT_P1, GPIO_PIN6
+#define FREQ_FIELD 0x00
+#define BAND_FIELD 0x0D
+#define STATUS_FIELD 0x40
+#define MODE_FIELD 0x4D
 
-#define LINE1_HOME 0x00
-#define LINE2_HOME 0x40
-
+// cursor positions are based on 30M, 20M, 17M and 15M bands
+// for 40M, decrement all by 1
+#define CURSOR_10 0x08
+#define CURSOR_100 0x07
+#define CURSOR_1K 0x06
+#define CURSOR_10K 0x05
 // Commands
 #define CLEAR	0x01
 
