@@ -15,40 +15,56 @@
 // Define all I/O
 
 
+uint8_t menuEncoderCWCount, menuEncoderCCWCount;
+uint8_t optionEncoderCWCount, optionEncoderCCWCount;
 
 // Track valid button press states globally
 volatile uint8_t button_pressed_flag = 0;
-
 
 int main(void) {
 
     WDT_A_hold(WDT_A_BASE);
     initClocks();
-    init_switch_s1s2();
     initGPIO();
-
     init_spi_shift_register(); // Hardware setup from the previous step
-    init_switch();          // encoder Timer_A3 debounce setup
 
     while (1)
     {
-        if (button_pressed_flag)
+        switch (buttonPressed)
         {
-            button_pressed_flag = 0; // Reset event flag
+        case BTN_PRESSED_NONE :
+            break;
+        case BTN_PRESSED_MENU_ENCODER_SWITCH:
+            break;
+        case BTN_PRESSED_OPTION_ENCODER_SWITCH :
+            break;
+        case BTN_PRESSED_MENU_ENCODER :
+            if (GPIO_getInputPinValue(MENU_ENCODER_A) != GPIO_getInputPinValue(MENU_ENCODER_B))
+            {
+                menuEncoderCWCount++;
+            } else {
+                menuEncoderCCWCount++;
+            }
+            // now toggle interrupt edge
+            P2IES ^= BIT1;
+            break;
+        case BTN_PRESSED_OPTION_ENCODER :
+            if (GPIO_getInputPinValue(OPTION_ENCODER_A) != GPIO_getInputPinValue(OPTION_ENCODER_B))
+            {
+                optionEncoderCWCount++;
+            } else {
+                optionEncoderCCWCount++;
+            }
+            // now toggle interrupt edge
+            P3IES ^= BIT2;
+            break;
+
 
             // Execute task: Send shifted data byte over eUSCI_B0
             send_byte_to_shift_register(data_to_send);
             delay_ms(12);
             send_byte_to_shift_register(0);
 
-            // Increment or modify the test byte
-            if ( data_to_send == SELECT_40M) {
-                data_to_send = SELECT_2030M;
-            } else if (data_to_send == SELECT_2030M) {
-                data_to_send = SELECT_1517M;
-            } else {
-                data_to_send = SELECT_40M;
-            }
         }
     }
 }

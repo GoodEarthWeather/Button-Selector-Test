@@ -86,44 +86,6 @@ void initGPIO(void)
    PMM_unlockLPM5();
 }
 
-void init_switch(void)
-{
-    // 1. Configure S1 (P4.0) as Input with an Internal Pull-Up Resistor
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P4, GPIO_PIN0);
-
-    // 2. Configure P4.0 Interrupts: Trigger on a High-to-Low transition (falling edge)
-    GPIO_selectInterruptEdge(GPIO_PORT_P4, GPIO_PIN0, GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-    GPIO_enableInterrupt(GPIO_PORT_P4, GPIO_PIN0);
-
-    // 1. Configure S2 (P2.3) as Input with an Internal Pull-Up Resistor
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P2, GPIO_PIN3);
-
-    // 2. Configure P2.3 Interrupts: Trigger on a High-to-Low transition (falling edge)
-    GPIO_selectInterruptEdge(GPIO_PORT_P2, GPIO_PIN3, GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN3);
-    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN3);
-
-    // 3. Configure Timer_A3 for the Debounce Timeout Period
-    // Using SMCLK (assumed ~1MHz) in Up Mode. 15,000 counts at 1MHz = 15ms delay.
-    Timer_A_initUpModeParam timerParam = {0};
-    timerParam.clockSource = TIMER_A_CLOCKSOURCE_SMCLK;
-    timerParam.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
-    timerParam.timerPeriod = 15000;
-    timerParam.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
-    timerParam.captureCompareInterruptEnable_CCR0_CCIE = TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE; // Enable CCR0 Interrupt
-    timerParam.timerClear = TIMER_A_DO_CLEAR;
-    timerParam.startTimer = false; // Do not start running yet
-
-    Timer_A_initUpMode(TIMER_A3_BASE, &timerParam);
-
-    // Disable FRAM power/IO lock (Required step for MSP430 FR2xx line)
-    //PMM_unlockLPM5();
-
-    // Enable Global Interrupts (GIE bit in Status Register)
-    __enable_interrupt();
-}
-
 void init_spi_shift_register(void)
 {
 
