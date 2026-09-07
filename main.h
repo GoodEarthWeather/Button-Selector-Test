@@ -15,7 +15,6 @@ void initClocks(void);
 void init_spi_shift_register(void);
 void initGPIO(void);
 void send_byte_to_shift_register(uint8_t);
-void init_switch_s1s2(void);
 
 // Define all I/O
 #define delay_ms(x)     __delay_cycles((long) x* 1000 * 8)

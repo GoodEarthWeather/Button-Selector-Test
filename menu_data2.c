@@ -8,6 +8,42 @@
 #include <string.h>
 #include <stdio.h>
 #include "menu_data.h"
+#include "hal_hw.h"
+#include "radio_state.h"
+
+/* ------------------------------------------------------------------ */
+/* Hardware / state action callbacks -- ONE per menu item, no          */
+/* exceptions. Even a "just set a variable" item gets a function here  */
+/* so that Menu_OptionMove()/Menu_Init() never need to know what kind  */
+/* of thing each item controls -- that knowledge lives ONLY in these   */
+/* functions and nowhere else. Signature must match MenuActionFn in    */
+/* menu_data.h.                                                        */
+/* ------------------------------------------------------------------ */
+
+static void Action_Wpm(const MenuItem_t *item, int16_t value)
+{
+    (void)item;
+    /* Standard PARIS timing: dot length (ms) = 1200 / WPM */
+    radioState.keyerDotTimeMs = (uint16_t)(1200 / value);
+}
+
+static void Action_Band(const MenuItem_t *item, int16_t value)
+{
+    (void)item; /* unused here, but available if the callback needs
+                 * item->def.list.options[value] etc. */
+    radioState.bandIndex = (uint8_t)value;
+    HAL_HW_SelectBand((uint8_t)value);
+}
+
+/* Add one static Action_* function per item here as you flesh out the
+ * remaining 19 slots, e.g.:
+ * static void Action_RfPower(const MenuItem_t *item, int16_t value)
+ * {
+ *     (void)item;
+ *     radioState.txPowerWatts = (uint8_t)value;
+ *     HAL_HW_SetRfPower(value);
+ * }
+ */
 
 /* ------------------------------------------------------------------ */
 /* String tables for LIST-type items                                   */
@@ -16,7 +52,7 @@
 
 static const char * const bandOptions[] =
 {
-    "40M", "30M", "20M", "17M", "15M"
+    "80M", "40M", "30M", "20M", "17M", "15M", "12M", "10M"
 };
 
 static const char * const modeOptions[] =
@@ -26,40 +62,7 @@ static const char * const modeOptions[] =
 
 static const char * const keyerOptions[] =
 {
-    "IAMBIC-A", "IAMBIC-B", "ULTIMATIC"
-};
-
-static const char * const filterOptions[] =
-{
-    "WIDE", "NARROW"
-};
-static const char * const rateOptions[] =
-{
-    "10", "100", "1K", "10K"
-};
-static const char * const spotOptions[] =
-{
-    "OFF", "ON"
-};
-static const char * const muteOptions[] =
-{
-    "OFF", "ON"
-};
-static const char * const playMemOptions[] =
-{
-    "PLAY MEM1", "PLAY MEM2", "PLAY MEM"
-};
-static const char * const recMemOptions[] =
-{
-    "RECORD MEM1", "RECORD MEM2", "RECORD MEM"
-};
-static const char * const paddleOrientOptions[] =
-{
-    "NORMAL", "REVERSE"
-};
-static const char * const audioOptions[] =
-{
-    "MONAURAL", "BINAURAL"
+    "IAMBIC-A", "IAMBIC-B", "STRAIGHT"
 };
 
 /* ------------------------------------------------------------------ */
@@ -75,159 +78,51 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
 {
     /* index 0 */
     {
-        .label = "BAND",
+        .label = "WPM",
         .ledIndex = 0,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = bandOptions,
-                       .numOptions = sizeof(bandOptions)/sizeof(bandOptions[0]),
-                       .defaultIndex = 1 /* "30M" */ },
-        .action = handleHW_band
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = 5, .maxValue = 40, .step = 1,
+                        .defaultValue = 20, .unitSuffix = "" },
+        .action = Action_Wpm   /* recomputes keyer dot-time in radioState */
     },
     /* index 1 */
     {
-        .label = "RATE",
+        .label = "BAND",
         .ledIndex = 1,
         .type = MENU_TYPE_LIST,
-        .def.list = { .options = rateOptions,
-                       .numOptions = sizeof(rateOptions)/sizeof(rateOptions[0]),
-                       .defaultIndex = 2 /* "1K" */ },
-        .action = NULL
+        .def.list = { .options = bandOptions,
+                       .numOptions = sizeof(bandOptions)/sizeof(bandOptions[0]),
+                       .defaultIndex = 1 /* "40M" */ },
+        .action = Action_Band   /* switches the bandpass filter relays */
     },
-
     /* index 2 */
     {
-        .label = "FILTER",
-        .ledIndex = 2,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = filterOptions,
-                       .numOptions = sizeof(filterOptions)/sizeof(filterOptions[0]),
-                       .defaultIndex = 0 },
-        .action = NULL
-    },
-    /* index 3 */
-    {
-        .label = "SPOT",
-        .ledIndex = 3,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = spotOptions,
-                       .numOptions = sizeof(spotOptions)/sizeof(spotOptions[0]),
-                       .defaultIndex = 0 },
-        .action = NULL
-    },
-    /* index 4 */
-    {
-        .label = "MUTE",
-        .ledIndex = 4,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = muteOptions,
-                       .numOptions = sizeof(muteOptions)/sizeof(muteOptions[0]),
-                       .defaultIndex = 0 },
-        .action = NULL
-    },
-    /* index 5 */
-    {
         .label = "MODE",
-        .ledIndex = 5,
+        .ledIndex = 2,
         .type = MENU_TYPE_LIST,
         .def.list = { .options = modeOptions,
                        .numOptions = sizeof(modeOptions)/sizeof(modeOptions[0]),
                        .defaultIndex = 0 },
         .action = NULL
     },
-    /* index 6 */
+    /* index 3 */
     {
-        .label = "PLAY MEM",
-        .ledIndex = 6,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = playMemOptions,
-                       .numOptions = sizeof(playMemOptions)/sizeof(playMemOptions[0]),
-                       .defaultIndex = 0 },
-        .action = NULL
-    },
-    /* index 7 */
-    {
-        .label = "RECORD MEM",
-        .ledIndex = 7,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = recMemOptions,
-                       .numOptions = sizeof(recMemOptions)/sizeof(recMemOptions[0]),
-                       .defaultIndex = 0 },
-        .action = NULL
-    },
-    /* index 8 */
-    {
-        .label = "WPM",
-        .ledIndex = 8,
-        .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = 5, .maxValue = 30, .step = 1,
-                        .defaultValue = 20, .unitSuffix = "" },
-        .action = handleHW_wpm
-    },
-    /* index 9 */
-    {
-        .label = "PADDLE ORIENT",
-        .ledIndex = 9,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = paddleOrientOptions,
-                       .numOptions = sizeof(paddleOrientOptions)/sizeof(paddleOrientOptions[0]),
-                       .defaultIndex = 1 },
-        .action = NULL
-    },
-    /* index 10 */
-    {
-        .label = "KEYER MODE",
-        .ledIndex = 10,
+        .label = "KEYER",
+        .ledIndex = 3,
         .type = MENU_TYPE_LIST,
         .def.list = { .options = keyerOptions,
                        .numOptions = sizeof(keyerOptions)/sizeof(keyerOptions[0]),
-                       .defaultIndex = 2 },
-        .action = NULL
-    },
-    /* index 11 */
-    {
-        .label = "QSK",
-        .ledIndex = 11,
-        .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = 5, .maxValue = 800, .step = 1,
-                        .defaultValue = 150, .unitSuffix = "ms" },
-        .action = NULL
-    },
-    /* index 12 */
-    {
-        .label = "AUDIO MODE",
-        .ledIndex = 12,
-        .type = MENU_TYPE_LIST,
-        .def.list = { .options = audioOptions,
-                       .numOptions = sizeof(audioOptions)/sizeof(audioOptions[0]),
                        .defaultIndex = 0 },
         .action = NULL
     },
-    /* index 13 */
+    /* index 4 */
     {
-        .label = "VOLTAGE",
-        .ledIndex = 13,
+        .label = "RF PWR",
+        .ledIndex = 4,
         .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = 5, .maxValue = 5, .step = 0,
-                        .defaultValue = 5, .unitSuffix = "V" },
-        .action = NULL
-    },
-    /* index 14 */
-    {
-        .label = "XIT",
-        .ledIndex = 14,
-        .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
-                        .defaultValue = 0, .unitSuffix = "Hz" },
-        .action = NULL
-    },
-    /* index 15 */
-    {
-        .label = "RIT",
-        .ledIndex = 15,
-        .type = MENU_TYPE_RANGE,
-        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
-                        .defaultValue = 0, .unitSuffix = "Hz" },
-        .action = NULL
+        .def.range = { .minValue = 1, .maxValue = 5, .step = 1,
+                        .defaultValue = 5, .unitSuffix = "W" },
+        .action = NULL   /* wire up Action_RfPower here once you add it */
     },
 
     /* ---- fill in the remaining 19 items the same way ---- */
@@ -365,6 +260,15 @@ void Menu_OptionMove(int8_t delta)
     }
 
     menuCurrentValue[menuSelectedIndex] = value;
+
+    /* Apply the HW side effect (if any) for the item just changed.
+     * Fired unconditionally here even if value ended up unchanged
+     * (e.g. clamped at a RANGE limit) -- harmless for idempotent
+     * actions like relay selection, and keeps this call site simple. */
+    if (item->action != NULL)
+    {
+        item->action(item, value);
+    }
 }
 
 void Menu_FormatDisplayString(uint8_t itemIndex, char *buf, uint8_t bufSize)

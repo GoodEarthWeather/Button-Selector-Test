@@ -55,6 +55,14 @@ typedef struct
     uint8_t               defaultIndex;
 } MenuList_t;
 
+/* ---- Hardware action callback -------------------------------------- */
+/* Fired whenever this item's value changes (Option Encoder), AND once  */
+/* at startup for every item that has one -- see Menu_Init(). item is   */
+/* the item's own definition (so the callback can reach def.list/range  */
+/* if it needs the option string or range info); value is the new       */
+/* current value (numeric for RANGE, list index for LIST). Item types   */
+/* that only affect internal state (e.g. WPM feeding a keyer timer      */
+/* elsewhere) can simply leave this NULL -- it is never required.       */
 typedef void (*MenuActionFn)(const struct MenuItem_s *item, int16_t value);
 
 /* ---- One menu item definition (STATIC / const / lives in FRAM) ---- */
@@ -95,7 +103,11 @@ extern uint8_t menuSelectedIndex;
 
 /* Call once at startup: loads defaultValue/defaultIndex into
  * menuCurrentValue[] the FIRST time only (see .c file for FRAM
- * first-boot detection pattern). */
+ * first-boot detection pattern). ALSO fires every item's action
+ * callback (if any) using whatever value is currently in
+ * menuCurrentValue[] -- restored-from-FRAM or freshly-defaulted --
+ * so hardware that doesn't itself persist state (relays, etc.) gets
+ * put back in sync with the saved menu settings on every boot. */
 void Menu_Init(void);
 
 /* Menu Encoder turned: moves menuSelectedIndex, wraps 0..23.

@@ -40,6 +40,7 @@ int main(void) {
         case BTN_PRESSED_OPTION_ENCODER_SWITCH :
             break;
         case BTN_PRESSED_MENU_ENCODER :
+            handle_menu_encoder();
             break;
         case BTN_PRESSED_OPTION_ENCODER :
             if (GPIO_getInputPinValue(OPTION_ENCODER_A) != GPIO_getInputPinValue(OPTION_ENCODER_B))
@@ -73,16 +74,20 @@ void handle_menu_encoder(void)
     P2IES ^= BIT1;
     if (GPIO_getInputPinValue(MENU_ENCODER_A) != GPIO_getInputPinValue(MENU_ENCODER_B))
     {
-        Menu_SelectMove(menuEncoderCWCount++);
+        menuEncoderCWCount++;
+        Menu_SelectMove(menuEncoderCWCount);
     } else {
-        Menu_SelectMove(menuEncoderCCWCount++);
+        menuEncoderCCWCount++;
+        Menu_SelectMove(menuEncoderCCWCount);
     }
+    menuEncoderCWCount = menuEncoderCCWCount = 0;
     // menuSelectedIndex now contains the index to the new selected menu
     // now get led index associated with the new menu index
     led_index = Menu_GetSelectedLedIndex(void);
     // now send this to the LED shifter to update the LEDs
     updateLEDShifter(led_index);
-    // now update LCD to match selected menu
+    // now update LCD status field to show current menu option
+    updateLCD_menu
 
 
 

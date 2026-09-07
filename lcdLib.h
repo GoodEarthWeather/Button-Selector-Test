@@ -68,6 +68,18 @@ by: Elias N Jaquez
 #define STATUS_FIELD 0x40
 #define MODE_FIELD 0x4D
 
+#define FREQ_FIELD_WIDTH 12
+#define BAND_FIELD_WIDTH 3
+#define STATUS_FIELD_WIDTH 12
+#define MODE_FIELD_WIDTH 3
+
+typedef struct
+{
+    uint8_t baseAddr;    /* DDRAM address, e.g. 0x00 for FREQ, 0x40 for STATUS */
+    uint8_t fieldWidth;  /* characters, e.g. 12 for STATUS */
+} LcdField_t;
+
+
 // cursor positions are based on 30M, 20M, 17M and 15M bands
 // for 40M, decrement all by 1
 #define CURSOR_10 0x08

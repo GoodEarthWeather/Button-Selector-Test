@@ -12,8 +12,15 @@ static char batVoltBuffer[8]; /* for holding battery voltage text */
 static char cwSpeedBuffer[8]; /* for holding cw speed text */
 static char ritStateBuffer[16];
 
+
+static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
+static const LcdField_t fieldBand   = { BAND_FIELD, BAND_FIELD_WIDTH };
+static const LcdField_t fieldStatus = { STATUS_FIELD, STATUS_FIELD_WIDTH };
+static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
+
 void setCWSpeedText(void);
 void setBatVoltText(uint32_t);
+void LCD_WriteField(const LcdField_t *, const char *);
 
 
 void lcdInit() {
@@ -46,16 +53,20 @@ void lcdTriggerEN() {
     GPIO_setOutputLowOnPin(LCD_CLK);
 }
 
-void lcdWriteData(unsigned char data) {
-	GPIO_setOutputHighOnPin(LCD_RS); // Set RS to data
-	setData(data >> 4); // Upper nibble
-	lcdTriggerEN();
-	setData(data); // Lower nibble
-	lcdTriggerEN();
-	delay_us(50); // Delay > 47 us
+void lcdWriteData(uint8_t *data) {
+    uint8_t i = 0;
+    while (data[i] != '\0') {
+        GPIO_setOutputHighOnPin(LCD_RS); // Set RS to data
+        setData(data >> 4); // Upper nibble
+        lcdTriggerEN();
+        setData(data); // Lower nibble
+        lcdTriggerEN();
+        delay_us(50); // Delay > 47 us
+        i++;
+    }
 }
 
-void lcdWriteCmd(unsigned char cmd) {
+void lcdWriteCmd(uint8_t cmd) {
     GPIO_setOutputLowOnPin(LCD_RS);
     setData(cmd >> 4);
     lcdTriggerEN();
@@ -147,6 +158,7 @@ void moveFreqCursor(void)
  * All functions above are the low level LCD routines
  *
  */
+/****************************************
 // routine to display frequency
 void updateDisplay(uint8_t field)
 {
@@ -327,6 +339,47 @@ void updateDisplay(uint8_t field)
             lcdSetText("PLAY MEM3",0,1);
     }
     moveFreqCursor();
+}
+/*
+ * New LCD functions to support fieldRadio1.2
+ */
+/*
+ * This routine will update the LCD display whenever the menu encoder
+ * is rotated.  It will update the status field with the currently
+ * selected option.
+ */
+void updateLCD_menu()
+{
+    const char *result;
+    // first determine menu type
+    if (menuTable[menuSelectedIndex].type == MENU_TYPE_RANGE)
+    {
+        result = number_to_string((uint32_t)menuCurrentValue[menuSelectedIndex]);
+    }
+    else
+    {
+        result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
+    }
+    LCD_WriteField(fieldStatus,result);
+}
+
+
+void LCD_WriteField(const LcdField_t *field, const char *text)
+{
+    char buf[16 + 1];
+    uint8_t len = (uint8_t)strlen(text);
+
+    if (len > field->fieldWidth)
+    {
+        len = field->fieldWidth;
+    }
+
+    memset(buf, ' ', field->fieldWidth);
+    memcpy(buf, text, len);
+    buf[field->fieldWidth] = '\0';
+
+    lcdWriteCmd(field->baseAddr);
+    lcdWriteData(buf);
 }
 
 /* This routine will take the battery voltage and convert it to text for the LCD */
