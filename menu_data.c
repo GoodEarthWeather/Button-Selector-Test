@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "menu_data.h"
+#include "radio_state.h"
 
 /* ------------------------------------------------------------------ */
 /* String tables for LIST-type items                                   */

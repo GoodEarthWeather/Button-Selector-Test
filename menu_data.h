@@ -54,7 +54,7 @@ typedef struct
     uint8_t              numOptions;
     uint8_t               defaultIndex;
 } MenuList_t;
-
+struct MenuItem_s;
 typedef void (*MenuActionFn)(const struct MenuItem_s *item, int16_t value);
 
 /* ---- One menu item definition (STATIC / const / lives in FRAM) ---- */
@@ -105,7 +105,7 @@ void Menu_SelectMove(int8_t delta);
 /* Menu Option Encoder turned: changes the value/index of the
  * currently selected item. Clamps for RANGE, wraps for LIST
  * (change to suit taste -- see .c file). */
-void Menu_OptionMove(int8_t delta);
+void Option_SelectMove(int8_t delta);
 
 /* Formats "<LABEL> <value>" into buf for the LCD, e.g. "WPM 20" or
  * "BAND 17M". buf must be at least LCD_LINE_LEN+1 bytes. */

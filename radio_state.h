@@ -12,10 +12,13 @@
 #define RADIO_STATE_H_
 
 #include <stdint.h>
+#include "menu_data.h"
 
-void handleHW_wpm(const MenuItem_t *, int16_t);
-void handleHW_band(const MenuItem_t *, int16_t);
+void handleHW_wpm(const  MenuItem_t *, int16_t);
+void handleHW_band(const  MenuItem_t *, int16_t);
 void handleHW_rate(const MenuItem_t *, int16_t);
+
+#define BAND_40M 0
 
 typedef struct
 {

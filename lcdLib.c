@@ -1,16 +1,15 @@
 #include "driverlib.h"
 #include "lcdLib.h"
-#include "main.h"
+//#include "main.h"
 #include <stdlib.h>
 //#include <math.h>
 #include "menu_data.h"
+#include "radio_state.h"
 
 
 static void lcdTriggerEN(void);
 static void lcdWriteData(uint8_t *);
 static void lcdWriteCmd(uint8_t);
-static void lcdSetText(char*, int);
-static void lcdSetInt(uint32_t, int);
 static void lcdClear(void);
 static void setData(uint8_t);
 static char *number_to_string(uint32_t);
@@ -33,14 +32,23 @@ static void LCD_WriteField(const LcdField_t *, const char *);
 // Commands
 #define CLEAR   0x01
 
+#define LCD_D4 GPIO_PORT_P5, GPIO_PIN2
+#define LCD_D5 GPIO_PORT_P5, GPIO_PIN1
+#define LCD_D6 GPIO_PORT_P5, GPIO_PIN0
+#define LCD_D7 GPIO_PORT_P4, GPIO_PIN7
+#define LCD_RS GPIO_PORT_P6, GPIO_PIN0
+#define LCD_CLK GPIO_PORT_P3, GPIO_PIN3
+
 
 
 #define BUFFER_SIZE 12
 static char buffer[BUFFER_SIZE];  /* must be static to be able to return it */
+/*
 static char freqBuffer[16];
-static char batVoltBuffer[8]; /* for holding battery voltage text */
-static char cwSpeedBuffer[8]; /* for holding cw speed text */
+static char batVoltBuffer[8];
+static char cwSpeedBuffer[8];
 static char ritStateBuffer[16];
+*/
 
 
 static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
@@ -83,9 +91,9 @@ static void lcdWriteData(uint8_t *data) {
     uint8_t i = 0;
     while (data[i] != '\0') {
         GPIO_setOutputHighOnPin(LCD_RS); // Set RS to data
-        setData(data >> 4); // Upper nibble
+        setData(data[i] >> 4); // Upper nibble
         lcdTriggerEN();
-        setData(data); // Lower nibble
+        setData(data[i]); // Lower nibble
         lcdTriggerEN();
         delay_us(50); // Delay > 47 us
         i++;
@@ -102,22 +110,6 @@ static void lcdWriteCmd(uint8_t cmd) {
         delay_ms(2);
     else
         delay_us(50);
-}
-static void lcdSetText(char* text, int x) {
-    uint8_t i;
-    x |= 0x80; // set bit 7 to indicate a command
-    lcdWriteCmd(x);
-    i = 0;  // now send character data
-    while (text[i] != '\0') {
-        lcdWriteData(text[i]);
-        i++;
-    }
-}
-
-static void lcdSetInt(uint32_t val, int x){
-	char *result;
-	result = number_to_string(val);
-	lcdSetText(result, x);
 }
 
 static void lcdClear(void) {
@@ -155,8 +147,6 @@ static char *number_to_string(uint32_t number)
 void moveFreqCursor(void)
 {
     uint8_t address;
-    extern uint32_t radioState;
-    extern uint8_t radioState;
 
     switch (radioState.freqMultiplier) {
     case 10 :
@@ -377,7 +367,6 @@ void updateDisplay(uint8_t field)
 void updateLCD_menu(void)
 {
     const char *result;
-    extern int16_t menuCurrentValue;
     // first determine menu type
     if (menuTable[menuSelectedIndex].type == MENU_TYPE_RANGE)
     {
@@ -387,13 +376,13 @@ void updateLCD_menu(void)
     {
         result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
     }
-    LCD_WriteField(fieldStatus,result);
+    LCD_WriteField(&fieldStatus,result);
 }
 
 
 static void LCD_WriteField(const LcdField_t *field, const char *text)
 {
-    char buf[16 + 1];
+    uint8_t buf[16 + 1];
     uint8_t len = (uint8_t)strlen(text);
 
     if (len > field->fieldWidth)

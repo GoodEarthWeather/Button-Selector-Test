@@ -2,7 +2,7 @@
 
 
 #include "driverlib.h"
-#include "main.h"
+//#include "main.h"
 #include "isr.h"
 #include "menu_data.h"
 #include "radio_state.h"
@@ -32,6 +32,8 @@ int main(void) {
     initClocks();
     initGPIO();
     lcdInit();
+    Menu_Init();
+    updateLCD_menu();
     init_spi_shift_register();
 
     while (1)
@@ -41,8 +43,10 @@ int main(void) {
         case BTN_PRESSED_NONE :
             break;
         case BTN_PRESSED_MENU_ENCODER_SWITCH:
+            buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_OPTION_ENCODER_SWITCH :
+            buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_MENU_ENCODER :
             handle_menu_encoder();

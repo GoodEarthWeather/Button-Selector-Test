@@ -4,9 +4,15 @@
  *  Created on: June 26, 2019
  *      Author: dmcneill
  *//////
-#include "main.h"
+//#include "main.h"
 #include "init.h"
 #include "driverlib.h"
+
+#define SHIFTER_CLOCK   GPIO_PORT_P1, GPIO_PIN1
+#define SHIFTER_DATA   GPIO_PORT_P1, GPIO_PIN2
+
+
+
 
 //This file contains the routines to initialize everything
 // QEX Amplifier Tester
