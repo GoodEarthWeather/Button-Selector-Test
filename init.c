@@ -5,6 +5,8 @@
  *      Author: dmcneill
  *//////
 #include "main.h"
+#include "init.h"
+#include "driverlib.h"
 
 //This file contains the routines to initialize everything
 // QEX Amplifier Tester

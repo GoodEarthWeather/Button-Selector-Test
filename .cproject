@@ -133,7 +133,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="hal_output_stub.c|hal_output_real.c|main_eval.c|lnk_msp430fr2476_original.cmd|key.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="claude|menu_data2.c|hal_output_stub.c|hal_output_real.c|main_eval.c|lnk_msp430fr2476_original.cmd|key.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

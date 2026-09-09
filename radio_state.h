@@ -13,15 +13,18 @@
 
 #include <stdint.h>
 
+void handleHW_wpm(const MenuItem_t *, int16_t);
+void handleHW_band(const MenuItem_t *, int16_t);
+void handleHW_rate(const MenuItem_t *, int16_t);
+
 typedef struct
 {
-    uint16_t keyerDotTimeMs;   /* CW dot duration, derived from WPM     */
-    uint8_t  bandIndex;        /* mirrors menuCurrentValue[BAND], kept
-                                 * here too so non-menu code (e.g. a
-                                 * band-edge frequency lookup) doesn't
-                                 * need to touch menu_data.h at all    */
-    uint8_t  txPowerWatts;
-    /* add more fields as menu items are fleshed out */
+    uint8_t selectedSideband;
+    uint8_t selectedFilter;
+    uint8_t audioState;
+    uint8_t wpm;  // current cw speed
+    uint16_t freqMultiplier;
+    uint8_t  bandIndex;
 } RadioState_t;
 
 extern RadioState_t radioState;

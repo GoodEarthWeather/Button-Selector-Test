@@ -47,11 +47,11 @@ static const char * const muteOptions[] =
 };
 static const char * const playMemOptions[] =
 {
-    "PLAY MEM1", "PLAY MEM2", "PLAY MEM"
+    "PLAY MEM1", "PLAY MEM2", "PLAY MEM3"
 };
 static const char * const recMemOptions[] =
 {
-    "RECORD MEM1", "RECORD MEM2", "RECORD MEM"
+    "RECORD MEM1", "RECORD MEM2", "RECORD MEM3"
 };
 static const char * const paddleOrientOptions[] =
 {
@@ -91,7 +91,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .def.list = { .options = rateOptions,
                        .numOptions = sizeof(rateOptions)/sizeof(rateOptions[0]),
                        .defaultIndex = 2 /* "1K" */ },
-        .action = NULL
+        .action = handleHW_rate
     },
 
     /* index 2 */
@@ -328,7 +328,7 @@ void Menu_SelectMove(int8_t delta)
     menuSelectedIndex = (uint8_t)newIndex;
 }
 
-void Menu_OptionMove(int8_t delta)
+void Option_SelectMove(int8_t delta)
 {
     const MenuItem_t *item = &menuTable[menuSelectedIndex];
     int16_t value = menuCurrentValue[menuSelectedIndex];

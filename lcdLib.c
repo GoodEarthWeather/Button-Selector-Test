@@ -3,6 +3,36 @@
 #include "main.h"
 #include <stdlib.h>
 //#include <math.h>
+#include "menu_data.h"
+
+
+static void lcdTriggerEN(void);
+static void lcdWriteData(uint8_t *);
+static void lcdWriteCmd(uint8_t);
+static void lcdSetText(char*, int);
+static void lcdSetInt(uint32_t, int);
+static void lcdClear(void);
+static void setData(uint8_t);
+static char *number_to_string(uint32_t);
+static void LCD_WriteField(const LcdField_t *, const char *);
+
+#define FREQ_FIELD 0x00
+#define BAND_FIELD 0x0D
+#define STATUS_FIELD 0x40
+#define MODE_FIELD 0x4D
+#define FREQ_FIELD_WIDTH 12
+#define BAND_FIELD_WIDTH 3
+#define STATUS_FIELD_WIDTH 12
+#define MODE_FIELD_WIDTH 3
+// cursor positions are based on 30M, 20M, 17M and 15M bands
+// for 40M, decrement all by 1
+#define CURSOR_10 0x08
+#define CURSOR_100 0x07
+#define CURSOR_1K 0x06
+#define CURSOR_10K 0x05
+// Commands
+#define CLEAR   0x01
+
 
 
 #define BUFFER_SIZE 12
@@ -17,10 +47,6 @@ static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
 static const LcdField_t fieldBand   = { BAND_FIELD, BAND_FIELD_WIDTH };
 static const LcdField_t fieldStatus = { STATUS_FIELD, STATUS_FIELD_WIDTH };
 static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
-
-void setCWSpeedText(void);
-void setBatVoltText(uint32_t);
-void LCD_WriteField(const LcdField_t *, const char *);
 
 
 void lcdInit() {
@@ -47,13 +73,13 @@ void lcdInit() {
 	lcdWriteCmd(0x0E); // Display On, Cursor On, No blink
 }
 
-void lcdTriggerEN() {
+static void lcdTriggerEN(void) {
     GPIO_setOutputHighOnPin(LCD_CLK);  // toggle clock (enable) bit
     delay_us(20);
     GPIO_setOutputLowOnPin(LCD_CLK);
 }
 
-void lcdWriteData(uint8_t *data) {
+static void lcdWriteData(uint8_t *data) {
     uint8_t i = 0;
     while (data[i] != '\0') {
         GPIO_setOutputHighOnPin(LCD_RS); // Set RS to data
@@ -66,7 +92,7 @@ void lcdWriteData(uint8_t *data) {
     }
 }
 
-void lcdWriteCmd(uint8_t cmd) {
+static void lcdWriteCmd(uint8_t cmd) {
     GPIO_setOutputLowOnPin(LCD_RS);
     setData(cmd >> 4);
     lcdTriggerEN();
@@ -77,7 +103,7 @@ void lcdWriteCmd(uint8_t cmd) {
     else
         delay_us(50);
 }
-void lcdSetText(char* text, int x) {
+static void lcdSetText(char* text, int x) {
     uint8_t i;
     x |= 0x80; // set bit 7 to indicate a command
     lcdWriteCmd(x);
@@ -88,20 +114,20 @@ void lcdSetText(char* text, int x) {
     }
 }
 
-void lcdSetInt(uint32_t val, int x, int y){
+static void lcdSetInt(uint32_t val, int x){
 	char *result;
 	result = number_to_string(val);
 	lcdSetText(result, x);
 }
 
-void lcdClear() {
+static void lcdClear(void) {
 	lcdWriteCmd(CLEAR);
 }
 
 // This function will take a 4 bit data nibble and split it such that the bits
 // in position 2,3 are shifted up to positions 5,6 to match the mapping of the GPIO
 // to the LCD module.  It will then set the P2OUT ports to the resulting value
-void setData(uint8_t data)
+static void setData(uint8_t data)
 {
     (data & 0x01) ? (GPIO_setOutputHighOnPin(LCD_D4)) : (GPIO_setOutputLowOnPin(LCD_D4));
     (data & 0x02) ? (GPIO_setOutputHighOnPin(LCD_D5)) : (GPIO_setOutputLowOnPin(LCD_D5));
@@ -109,7 +135,7 @@ void setData(uint8_t data)
     (data & 0x08) ? (GPIO_setOutputHighOnPin(LCD_D7)) : (GPIO_setOutputLowOnPin(LCD_D7));
 }
 
-char *number_to_string(uint32_t number)
+static char *number_to_string(uint32_t number)
 {
     char *p;
     uint32_t digit;
@@ -129,10 +155,10 @@ char *number_to_string(uint32_t number)
 void moveFreqCursor(void)
 {
     uint8_t address;
-    extern uint32_t freqMultiplier;
-    extern uint8_t selectedBand;
+    extern uint32_t radioState;
+    extern uint8_t radioState;
 
-    switch (freqMultiplier) {
+    switch (radioState.freqMultiplier) {
     case 10 :
         address = CURSOR_10;
         break;
@@ -149,7 +175,7 @@ void moveFreqCursor(void)
         address = CURSOR_100;
         break;
     }
-    if ( selectedBand == BAND_40M )
+    if ( radioState.bandIndex == BAND_40M )
         address--;
 
     lcdWriteCmd(MOVE_CURSOR + address);
@@ -345,12 +371,13 @@ void updateDisplay(uint8_t field)
  */
 /*
  * This routine will update the LCD display whenever the menu encoder
- * is rotated.  It will update the status field with the currently
+ * or the menu option encoder is rotated.  It will update the status field with the currently
  * selected option.
  */
-void updateLCD_menu()
+void updateLCD_menu(void)
 {
     const char *result;
+    extern int16_t menuCurrentValue;
     // first determine menu type
     if (menuTable[menuSelectedIndex].type == MENU_TYPE_RANGE)
     {
@@ -364,7 +391,7 @@ void updateLCD_menu()
 }
 
 
-void LCD_WriteField(const LcdField_t *field, const char *text)
+static void LCD_WriteField(const LcdField_t *field, const char *text)
 {
     char buf[16 + 1];
     uint8_t len = (uint8_t)strlen(text);
@@ -382,12 +409,14 @@ void LCD_WriteField(const LcdField_t *field, const char *text)
     lcdWriteData(buf);
 }
 
-/* This routine will take the battery voltage and convert it to text for the LCD */
+/*
+
+  // This routine will take the battery voltage and convert it to text for the LCD
 void setBatVoltText(uint32_t result)
 {
    char *txt;
 
-    /* now convert to string */
+    // now convert to string
     txt = number_to_string(result);
 
     batVoltBuffer[0] = *txt++;
@@ -408,10 +437,10 @@ void setBatVoltText(uint32_t result)
         batVoltBuffer[5] = 'V';
         batVoltBuffer[6] = '\0';
     }
-    lcdSetText(batVoltBuffer,0,1);
+    lcdSetText(batVoltBuffer,0);
 }
 
-/* This routine will take the battery voltage and convert it to text for the LCD */
+// This routine will take the battery voltage and convert it to text for the LCD
 void setCWSpeedText(void)
 {
     extern uint8_t wpm;
@@ -420,7 +449,7 @@ void setCWSpeedText(void)
 
     lcdSetText("CWSPD: ",0,1);
 
-    /* now convert to string */
+    // now convert to string
     txt = number_to_string((uint32_t)wpm);
 
     cwSpeedBuffer[0] = *txt++;
@@ -433,3 +462,4 @@ void setCWSpeedText(void)
     }
     lcdSetText(cwSpeedBuffer,7,1);
 }
+*/

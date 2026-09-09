@@ -1,6 +1,17 @@
+
+
+
 #include "driverlib.h"
 #include "main.h"
+#include "isr.h"
+#include "menu_data.h"
+#include "radio_state.h"
+#include "init.h"
+#include "lcdLib.h"
 
+static void handle_menu_encoder(void);
+static void handle_option_encoder(void);
+static void updateLEDShifter( uint8_t);
 /*
  * This program uses the MSP430FR2476 eval board to test the
  * button selector board.
@@ -15,19 +26,13 @@
 // Define all I/O
 
 
-int8_t menuEncoderCWCount, menuEncoderCCWCount;
-int8_t optionEncoderCWCount, optionEncoderCCWCount;
-
-
-// Track valid button press states globally
-volatile uint8_t button_pressed_flag = 0;
-
 int main(void) {
 
     WDT_A_hold(WDT_A_BASE);
     initClocks();
     initGPIO();
-    init_spi_shift_register(); // Hardware setup from the previous step
+    lcdInit();
+    init_spi_shift_register();
 
     while (1)
     {
@@ -41,23 +46,26 @@ int main(void) {
             break;
         case BTN_PRESSED_MENU_ENCODER :
             handle_menu_encoder();
+            __disable_interrupt();
+            if (buttonPressed == BTN_PRESSED_MENU_ENCODER) {
+                buttonPressed = BTN_PRESSED_NONE;
+            }
+            __enable_interrupt();
             break;
         case BTN_PRESSED_OPTION_ENCODER :
-            if (GPIO_getInputPinValue(OPTION_ENCODER_A) != GPIO_getInputPinValue(OPTION_ENCODER_B))
-            {
-                optionEncoderCWCount++;
-            } else {
-                optionEncoderCCWCount++;
+            handle_option_encoder();
+            __disable_interrupt();
+            if (buttonPressed == BTN_PRESSED_OPTION_ENCODER) {
+                buttonPressed = BTN_PRESSED_NONE;
             }
-            // now toggle interrupt edge
-            P3IES ^= BIT2;
+            __enable_interrupt();
             break;
 
 
             // Execute task: Send shifted data byte over eUSCI_B0
-            send_byte_to_shift_register(data_to_send);
-            delay_ms(12);
-            send_byte_to_shift_register(0);
+            //send_byte_to_shift_register(data_to_send);
+            //delay_ms(12);
+            //send_byte_to_shift_register(0);
 
         }
     }
@@ -66,31 +74,45 @@ int main(void) {
 /*
  * This routine will handle response to the menu encoder being rotated.
  */
-void handle_menu_encoder(void)
+static void handle_menu_encoder(void)
 {
     uint8_t led_index;
 
-    // toggle interrupt edge - for encoder detection
-    P2IES ^= BIT1;
     if (GPIO_getInputPinValue(MENU_ENCODER_A) != GPIO_getInputPinValue(MENU_ENCODER_B))
     {
-        menuEncoderCWCount++;
-        Menu_SelectMove(menuEncoderCWCount);
+        Menu_SelectMove(ENCODER_CW);
     } else {
-        menuEncoderCCWCount++;
-        Menu_SelectMove(menuEncoderCCWCount);
+        Menu_SelectMove(ENCODER_CCW);
     }
-    menuEncoderCWCount = menuEncoderCCWCount = 0;
     // menuSelectedIndex now contains the index to the new selected menu
     // now get led index associated with the new menu index
-    led_index = Menu_GetSelectedLedIndex(void);
+    led_index = Menu_GetSelectedLedIndex();
     // now send this to the LED shifter to update the LEDs
     updateLEDShifter(led_index);
     // now update LCD status field to show current menu option
-    updateLCD_menu
-
-
-
+    updateLCD_menu();
+}
+/*
+ * This routine will handle response to the menu option encoder being rotated.
+ */
+static void handle_option_encoder(void)
+{
+    const MenuItem_t *item;
+    if (GPIO_getInputPinValue(OPTION_ENCODER_A) != GPIO_getInputPinValue(OPTION_ENCODER_B))
+    {
+        Option_SelectMove(ENCODER_CW);
+    } else {
+        Option_SelectMove(ENCODER_CCW);
+    }
+    // menuSelectedIndex now contains the index to the new selected option
+    // now update LCD status field to show current menu option
+    updateLCD_menu();
+    // now execute callback function to update HW
+    item = &menuTable[menuSelectedIndex];
+    if (item->action != NULL)
+    {
+        item->action(item, menuCurrentValue[menuSelectedIndex]);
+    }
 }
 
 // This routine will update menu LEDs
@@ -99,7 +121,7 @@ void handle_menu_encoder(void)
 // data[1] = byte for the SECOND chip
 // data[0] = byte for the THIRD chip
 // (byte order is reversed internally since the chain shifts "backwards")
-void updateLEDShifter( uint8_t index)
+static void updateLEDShifter( uint8_t index)
 {
     uint8_t i;
     uint8_t data[3];
