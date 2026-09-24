@@ -7,7 +7,7 @@
 #include "driverlib.h"
 #include "isr.h"
 
-uint8_t volatile buttonPressed;
+uint8_t volatile buttonPressed = BTN_PRESSED_NONE;
 
 // Port 4 interrupt service routine
 #pragma vector=PORT4_VECTOR
@@ -36,7 +36,7 @@ __interrupt void Port_3(void)
           // P3.2 = Option Encoder A
           buttonPressed = BTN_PRESSED_OPTION_ENCODER;
           // now toggle interrupt edge
-          P3IES ^= BIT2;
+          //P3IES ^= BIT2;
           break;
       default: break;
     }
@@ -49,11 +49,11 @@ __interrupt void Port_2(void)
 {
     switch(__even_in_range(P2IV,P2IV_P2IFG7))
     {
-      case  P2IV_P2IFG1:
-          // P2.1 = Menu Encoder A
+      case  P2IV_P2IFG7:
+          // P2.7 = Menu Encoder A
           buttonPressed = BTN_PRESSED_MENU_ENCODER;
           // toggle interrupt edge - for encoder detection
-          P2IES ^= BIT1;
+          //P2IES ^= BIT7;
           break;
       default: break;
     }

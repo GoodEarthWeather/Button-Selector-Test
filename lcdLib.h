@@ -2,6 +2,7 @@
 #ifndef LCDLIB_H_
 #define LCDLIB_H_
 
+#include "driverlib.h"
 #include <string.h>
 
 // Functions
@@ -17,6 +18,13 @@ void updateLCD_menu(void);
 // Pins
 
 #define MOVE_CURSOR 0x80   // add address to this for move cursor command
+#define LCD_D4 GPIO_PORT_P5, GPIO_PIN2
+#define LCD_D5 GPIO_PORT_P5, GPIO_PIN1
+#define LCD_D6 GPIO_PORT_P5, GPIO_PIN0
+#define LCD_D7 GPIO_PORT_P4, GPIO_PIN7
+#define LCD_RS GPIO_PORT_P6, GPIO_PIN0
+#define LCD_CLK GPIO_PORT_P3, GPIO_PIN3
+
 
 typedef struct
 {

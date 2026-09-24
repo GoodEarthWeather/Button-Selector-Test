@@ -6,6 +6,7 @@
  *//////
 //#include "main.h"
 #include "init.h"
+#include "lcdLib.h"
 #include "driverlib.h"
 
 #define SHIFTER_CLOCK   GPIO_PORT_P1, GPIO_PIN1
@@ -62,7 +63,7 @@ void initGPIO(void)
    GPIO_setOutputLowOnPin(SHIFTER_LATCH);
 
    //Initialize rotary encoder inputs and rotary encoder switches
-   // P4.6(switch), P2.1(A), P2.0(B) - for menu encoder
+   // P4.6(switch), P2.7(A), P2.4(B) - for menu encoder
    // P3.2(A), P3.6(B), P4.2(switch) for menu option encoder
    GPIO_setAsInputPin(MENU_ENCODER_A);
    GPIO_setAsInputPin(MENU_ENCODER_B);
@@ -87,11 +88,28 @@ void initGPIO(void)
    GPIO_clearInterrupt(OPTION_ENCODER_SWITCH);
 
 
+   // initalize LCD I/O
+   GPIO_setAsOutputPin(LCD_D4);
+   GPIO_setOutputLowOnPin(LCD_D4);
+   GPIO_setAsOutputPin(LCD_D5);
+   GPIO_setOutputLowOnPin(LCD_D5);
+   GPIO_setAsOutputPin(LCD_D6);
+   GPIO_setOutputLowOnPin(LCD_D6);
+   GPIO_setAsOutputPin(LCD_D7);
+   GPIO_setOutputLowOnPin(LCD_D7);
+   GPIO_setAsOutputPin(LCD_RS);
+   GPIO_setOutputLowOnPin(LCD_RS);
+   GPIO_setAsOutputPin(LCD_CLK);
+   GPIO_setOutputLowOnPin(LCD_CLK);
+
    /*
     * Disable the GPIO power-on default high-impedance mode to activate
     * previously configured port settings
     */
    PMM_unlockLPM5();
+   // Enable Global Interrupts (GIE bit in Status Register)
+   __enable_interrupt();
+
 }
 
 void init_spi_shift_register(void)

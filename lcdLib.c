@@ -32,14 +32,6 @@ static void LCD_WriteField(const LcdField_t *, const char *);
 // Commands
 #define CLEAR   0x01
 
-#define LCD_D4 GPIO_PORT_P5, GPIO_PIN2
-#define LCD_D5 GPIO_PORT_P5, GPIO_PIN1
-#define LCD_D6 GPIO_PORT_P5, GPIO_PIN0
-#define LCD_D7 GPIO_PORT_P4, GPIO_PIN7
-#define LCD_RS GPIO_PORT_P6, GPIO_PIN0
-#define LCD_CLK GPIO_PORT_P3, GPIO_PIN3
-
-
 
 #define BUFFER_SIZE 12
 static char buffer[BUFFER_SIZE];  /* must be static to be able to return it */
@@ -172,9 +164,9 @@ void moveFreqCursor(void)
 }
 /*****************
  * All functions above are the low level LCD routines
- *
  */
-/****************************************
+
+/*******************************
 // routine to display frequency
 void updateDisplay(uint8_t field)
 {
@@ -356,9 +348,7 @@ void updateDisplay(uint8_t field)
     }
     moveFreqCursor();
 }
-/*
- * New LCD functions to support fieldRadio1.2
- */
+*******************/
 /*
  * This routine will update the LCD display whenever the menu encoder
  * or the menu option encoder is rotated.  It will update the status field with the currently

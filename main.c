@@ -19,7 +19,7 @@ static void updateLEDShifter( uint8_t);
  * 6 pins for two encoders with switches
  * 6 pins for driving LCD
  * P1.1, P1.2 and P1.7 for shifter
- * P4.6, P2.1, P2.0 - for menu encoder
+ * P4.6, P2.7, P2.4 - for menu encoder
  * P3.2, P3.6, P4.2 for menu option encoder
  * P5.2, P5.1, P5.0, P4.7, P6.0, P3.3 for LCD
  */
@@ -29,48 +29,52 @@ static void updateLEDShifter( uint8_t);
 int main(void) {
 
     WDT_A_hold(WDT_A_BASE);
-    initClocks();
     initGPIO();
+    initClocks();
     lcdInit();
     Menu_Init();
     updateLCD_menu();
     init_spi_shift_register();
+    updateLEDShifter(0);  // initialize led array
 
     while (1)
     {
-        switch (buttonPressed)
+        if (buttonPressed != BTN_PRESSED_NONE)
         {
-        case BTN_PRESSED_NONE :
-            break;
-        case BTN_PRESSED_MENU_ENCODER_SWITCH:
-            buttonPressed = BTN_PRESSED_NONE;
-            break;
-        case BTN_PRESSED_OPTION_ENCODER_SWITCH :
-            buttonPressed = BTN_PRESSED_NONE;
-            break;
-        case BTN_PRESSED_MENU_ENCODER :
-            handle_menu_encoder();
-            __disable_interrupt();
-            if (buttonPressed == BTN_PRESSED_MENU_ENCODER) {
+            switch (buttonPressed)
+            {
+            case BTN_PRESSED_NONE :
+                break;
+            case BTN_PRESSED_MENU_ENCODER_SWITCH:
                 buttonPressed = BTN_PRESSED_NONE;
-            }
-            __enable_interrupt();
-            break;
-        case BTN_PRESSED_OPTION_ENCODER :
-            handle_option_encoder();
-            __disable_interrupt();
-            if (buttonPressed == BTN_PRESSED_OPTION_ENCODER) {
+                break;
+            case BTN_PRESSED_OPTION_ENCODER_SWITCH :
                 buttonPressed = BTN_PRESSED_NONE;
+                break;
+            case BTN_PRESSED_MENU_ENCODER :
+                handle_menu_encoder();
+                __disable_interrupt();
+                if (buttonPressed == BTN_PRESSED_MENU_ENCODER) {
+                    buttonPressed = BTN_PRESSED_NONE;
+                }
+                __enable_interrupt();
+                break;
+            case BTN_PRESSED_OPTION_ENCODER :
+                handle_option_encoder();
+                __disable_interrupt();
+                if (buttonPressed == BTN_PRESSED_OPTION_ENCODER) {
+                    buttonPressed = BTN_PRESSED_NONE;
+                }
+                __enable_interrupt();
+                break;
+
+
+                // Execute task: Send shifted data byte over eUSCI_B0
+                //send_byte_to_shift_register(data_to_send);
+                //delay_ms(12);
+                //send_byte_to_shift_register(0);
+
             }
-            __enable_interrupt();
-            break;
-
-
-            // Execute task: Send shifted data byte over eUSCI_B0
-            //send_byte_to_shift_register(data_to_send);
-            //delay_ms(12);
-            //send_byte_to_shift_register(0);
-
         }
     }
 }
