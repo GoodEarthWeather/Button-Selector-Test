@@ -17,12 +17,12 @@
 
 static const char * const bandOptions[] =
 {
-    "40M", "30M", "20M", "17M", "15M"
+    "BAND: 40M", "BAND: 30M", "BAND: 20M", "BAND: 17M", "BAND: 15M"
 };
 
 static const char * const modeOptions[] =
 {
-    "CW", "USB", "LSB"
+    "MODE: CW", "MODE: USB", "MODE: LSB"
 };
 
 static const char * const keyerOptions[] =
@@ -32,19 +32,19 @@ static const char * const keyerOptions[] =
 
 static const char * const filterOptions[] =
 {
-    "WIDE", "NARROW"
+    "FILT: WIDE", "FILT: NARROW"
 };
 static const char * const rateOptions[] =
 {
-    "10", "100", "1K", "10K"
+    "RATE: 10", "RATE: 100", "RATE: 1K", "RATE: 10K"
 };
 static const char * const spotOptions[] =
 {
-    "OFF", "ON"
+    "SPOT: OFF", "SPOT: ON"
 };
 static const char * const muteOptions[] =
 {
-    "OFF", "ON"
+    "MUTE: OFF", "MUTE: ON"
 };
 static const char * const playMemOptions[] =
 {
@@ -56,7 +56,7 @@ static const char * const recMemOptions[] =
 };
 static const char * const paddleOrientOptions[] =
 {
-    "NORMAL", "REVERSE"
+    "PDL: NORMAL", "PDL: REVERSE"
 };
 static const char * const audioOptions[] =
 {
@@ -161,7 +161,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .ledIndex = 8,
         .type = MENU_TYPE_RANGE,
         .def.range = { .minValue = 5, .maxValue = 30, .step = 1,
-                        .defaultValue = 20, .unitSuffix = "" },
+                        .defaultValue = 20, .unitSuffix = " WPM" },
         .action = handleHW_wpm
     },
     /* index 9 */
@@ -190,7 +190,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .ledIndex = 11,
         .type = MENU_TYPE_RANGE,
         .def.range = { .minValue = 5, .maxValue = 800, .step = 1,
-                        .defaultValue = 150, .unitSuffix = "ms" },
+                        .defaultValue = 150, .unitSuffix = " ms" },
         .action = NULL
     },
     /* index 12 */
@@ -209,7 +209,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .ledIndex = 13,
         .type = MENU_TYPE_RANGE,
         .def.range = { .minValue = 5, .maxValue = 5, .step = 0,
-                        .defaultValue = 5, .unitSuffix = "V" },
+                        .defaultValue = 5, .unitSuffix = " V" },
         .action = NULL
     },
     /* index 14 */
@@ -218,7 +218,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .ledIndex = 14,
         .type = MENU_TYPE_RANGE,
         .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
-                        .defaultValue = 0, .unitSuffix = "Hz" },
+                        .defaultValue = 0, .unitSuffix = " Hz" },
         .action = NULL
     },
     /* index 15 */
@@ -227,9 +227,81 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .ledIndex = 15,
         .type = MENU_TYPE_RANGE,
         .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
-                        .defaultValue = 0, .unitSuffix = "Hz" },
+                        .defaultValue = 0, .unitSuffix = " Hz" },
         .action = NULL
     },
+    /* index 16 */
+    {
+        .label = "",
+        .ledIndex = 16,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 17 */
+    {
+        .label = "",
+        .ledIndex = 17,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 18 */
+    {
+        .label = "",
+        .ledIndex = 18,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 19 */
+    {
+        .label = "",
+        .ledIndex = 19,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 20 */
+    {
+        .label = "",
+        .ledIndex = 20,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 21 */
+    {
+        .label = "",
+        .ledIndex = 21,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 22 */
+    {
+        .label = "",
+        .ledIndex = 22,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    },
+    /* index 23 */
+    {
+        .label = "",
+        .ledIndex = 23,
+        .type = MENU_TYPE_RANGE,
+        .def.range = { .minValue = -2000, .maxValue = 2000, .step = 10,
+                        .defaultValue = 0, .unitSuffix = "" },
+        .action = NULL
+    }
 
     /* ---- fill in the remaining 19 items the same way ---- */
     /* Until they're defined, zero-init is safe: type defaults to      */

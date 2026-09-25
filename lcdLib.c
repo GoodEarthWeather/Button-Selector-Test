@@ -13,7 +13,8 @@ static void lcdWriteCmd(uint8_t);
 static void lcdClear(void);
 static void setData(uint8_t);
 static char *number_to_string(uint32_t);
-static void LCD_WriteField(const LcdField_t *, const char *);
+//static void LCD_WriteField(const LcdField_t *, const char *);
+static void LCD_WriteField(const LcdField_t *, const char *, const char *);
 
 #define FREQ_FIELD 0x00
 #define BAND_FIELD 0x0D
@@ -354,6 +355,7 @@ void updateDisplay(uint8_t field)
  * or the menu option encoder is rotated.  It will update the status field with the currently
  * selected option.
  */
+/********************************
 void updateLCD_menu(void)
 {
     const char *result;
@@ -384,9 +386,61 @@ static void LCD_WriteField(const LcdField_t *field, const char *text)
     memcpy(buf, text, len);
     buf[field->fieldWidth] = '\0';
 
-    lcdWriteCmd(field->baseAddr);
+    lcdWriteCmd(0x80 | field->baseAddr);
     lcdWriteData(buf);
 }
+***************************/
+void updateLCD_menu(void)
+{
+    const char *result;
+    const char *suffix = NULL;
+
+    if (menuTable[menuSelectedIndex].type == MENU_TYPE_RANGE)
+    {
+        result = number_to_string((uint32_t)menuCurrentValue[menuSelectedIndex]);
+        suffix = menuTable[menuSelectedIndex].def.range.unitSuffix; // adjust to match your actual field name
+    }
+    else
+    {
+        result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
+    }
+
+    LCD_WriteField(&fieldStatus, result, suffix);
+}
+
+static void LCD_WriteField(const LcdField_t *field, const char *text, const char *suffix)
+{
+    uint8_t buf[16 + 1];
+    uint8_t len = (uint8_t)strlen(text);
+
+    if (len > field->fieldWidth)
+    {
+        len = field->fieldWidth;
+    }
+    memcpy(buf, text, len);
+
+    if (suffix != NULL && len < field->fieldWidth)
+    {
+        uint8_t suffixLen = (uint8_t)strlen(suffix);
+        uint8_t room = field->fieldWidth - len;
+        if (suffixLen > room)
+        {
+            suffixLen = room;
+        }
+        memcpy(&buf[len], suffix, suffixLen);
+        len += suffixLen;
+    }
+
+    if (len < field->fieldWidth)
+    {
+        memset(&buf[len], ' ', field->fieldWidth - len);
+    }
+    buf[field->fieldWidth] = '\0';
+
+    lcdWriteCmd(0x80 | field->baseAddr);
+    lcdWriteData(buf);
+}
+
 
 /*
 

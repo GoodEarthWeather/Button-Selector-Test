@@ -133,9 +133,9 @@ static void updateLEDShifter( uint8_t index)
 {
     uint8_t i;
     uint8_t data[3];
-    uint32_t selectedLED;
+    uint32_t selectedLED = 0;
 
-    selectedLED = (1 << index);  // convert number to bit
+    selectedLED = (1UL << index);  // convert number to bit
     selectedLED = ~selectedLED;  // invert all bits to match HW implementation of turning on LED
     // construct bytes to send
     data[2] = (uint8_t)(selectedLED & 0x000000FF);
