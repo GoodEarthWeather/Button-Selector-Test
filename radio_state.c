@@ -36,6 +36,9 @@ static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
 #define BAND_17M 3
 #define BAND_15M 4
 
+#define SPOT_OFF 0
+#define SPOT_ON 1
+
 #define MUTE 0x1
 #define UNMUTE 0x0
 
@@ -47,7 +50,8 @@ static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
 
 // the indexes of relayCode[] correspond to the bandIndex
 static uint8_t relayCode[] = {RELAY_40M, RELAY_30M, RELAY_20M, RELAY_17M, RELAY_15M};
-static char * bandName[] = {"40M", "30M", "20M", "17M", "15M"};
+
+
 
 RadioState_t radioState = { 0 };
 
@@ -62,7 +66,7 @@ RadioState_t radioState = { 0 };
 
 void handleHW_wpm(const MenuItem_t *item, int16_t value)
 {
-    (void)item;
+
     // Since the menu item for CW speed is a range value, it has
     // already been incremented or decremented by the option_move
     // function.
@@ -72,18 +76,19 @@ void handleHW_wpm(const MenuItem_t *item, int16_t value)
 
 void handleHW_band(const MenuItem_t *item, int16_t value)
 {
-    //const char *result;
+
     const char *suffix = NULL;
-    uint8_t index;
+    const char * bandName[] = {"40M", "30M", "20M", "17M", "15M"};
+    //uint8_t index;
     //(void)item; /* unused here, but available if the callback needs
     //             * item->def.list.options[value] etc. */
     radioState.bandIndex = (uint8_t)value;
-    radioState.bandRelayCode =relayCode[(uint8_t)value];
-    // update BAND field
+    radioState.bandRelayCode = relayCode[(uint8_t)value];
     // get index of band selected
-    //result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
-    index = (uint8_t)menuCurrentValue[menuSelectedIndex];
-    LCD_WriteField(&fieldBand,bandName[index],suffix);
+    //index = (uint8_t)menuCurrentValue[menuSelectedIndex];
+    //LCD_WriteField(&fieldBand,bandName[index],suffix);
+    LCD_WriteField(&fieldBand,bandName[(uint8_t)value],suffix);
+
     //selectAudioState(MUTE);
     switch (value)
     {
@@ -109,6 +114,44 @@ void handleHW_band(const MenuItem_t *item, int16_t value)
     *
     */
 }
+
+// Routine to handle mode
+void handleHW_mode(const MenuItem_t *item, int16_t value)
+{
+    const char * modeName[] = {" CW", "USB", "LSB"};
+    const char *suffix = NULL;
+    radioState.modeIndex = (uint8_t)value;
+    LCD_WriteField(&fieldMode,modeName[(uint8_t)value],suffix);
+    // write code to implement HW change of mode
+}
+
+// Routine to handle audio filter
+void handleHW_filter(const MenuItem_t *item, int16_t value)
+{
+    radioState.filterIndex = (uint8_t)value;
+    // write code to implement HW change of filter
+}
+
+// Routine to handle keyer option (iambic-a, iambic-b, ultimatic)
+void handleHW_keyer(const MenuItem_t *item, int16_t value)
+{
+    radioState.keyerIndex = (uint8_t)value;
+    // write code to implement SW change of keyer type
+}
+
+// Routine to handle spot
+void handleHW_spot(const MenuItem_t *item, int16_t value)
+{
+    if ((uint8_t)value == SPOT_OFF) {
+        // handle turning spot off
+        ;
+    } else {
+        // handle turning spot on
+        ;
+    }
+    // write code to implement SW change of keyer type
+}
+
 /*
  * Routine to update rate
  */
@@ -117,7 +160,7 @@ void handleHW_rate(const MenuItem_t *item, int16_t value)
     const uint32_t rateValues[] = {10,100,1000,10000};
     // value is the index into the *item list
     radioState.freqMultiplier = rateValues[value];
-    moveFreqCursor();
+    moveFreqCursor((uint8_t)value);
 }
 
 /*******************

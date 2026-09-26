@@ -103,7 +103,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .def.list = { .options = filterOptions,
                        .numOptions = sizeof(filterOptions)/sizeof(filterOptions[0]),
                        .defaultIndex = 0 },
-        .action = NULL
+        .action = handleHW_filter
     },
     /* index 3 */
     {
@@ -113,7 +113,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .def.list = { .options = spotOptions,
                        .numOptions = sizeof(spotOptions)/sizeof(spotOptions[0]),
                        .defaultIndex = 0 },
-        .action = NULL
+        .action = handleHW_spot
     },
     /* index 4 */
     {
@@ -133,7 +133,7 @@ const MenuItem_t menuTable[NUM_MENU_ITEMS] =
         .def.list = { .options = modeOptions,
                        .numOptions = sizeof(modeOptions)/sizeof(modeOptions[0]),
                        .defaultIndex = 0 },
-        .action = NULL
+        .action = handleHW_mode
     },
     /* index 6 */
     {

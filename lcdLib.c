@@ -23,6 +23,7 @@ static char *number_to_string(uint32_t);
 #define CURSOR_100 0x07
 #define CURSOR_1K 0x06
 #define CURSOR_10K 0x05
+
 // Commands
 #define CLEAR   0x01
 
@@ -127,27 +128,12 @@ static char *number_to_string(uint32_t number)
 
 // routine to move cursor for frequency readout; always on line 1
 //
-void moveFreqCursor(void)
+void moveFreqCursor(uint8_t index)
 {
     uint8_t address;
+    const uint8_t cursorAddr[] = {CURSOR_10, CURSOR_100, CURSOR_1K, CURSOR_10K};
 
-    switch (radioState.freqMultiplier) {
-    case 10 :
-        address = CURSOR_10;
-        break;
-    case 100 :
-        address = CURSOR_100;
-        break;
-    case 1000 :
-        address = CURSOR_1K;
-        break;
-    case 10000 :
-        address = CURSOR_10K;
-        break;
-    default:
-        address = CURSOR_100;
-        break;
-    }
+    address = cursorAddr[index];
     if ( radioState.bandIndex == BAND_40M )
         address--;
 

@@ -14,7 +14,7 @@ typedef struct
 
 // Functions
 void lcdInit();                                 // Initialize LCD
-void moveFreqCursor(void);
+void moveFreqCursor(uint8_t);
 void updateLCD_status(void);
 void LCD_WriteField(const LcdField_t *, const char *, const char *);
 
