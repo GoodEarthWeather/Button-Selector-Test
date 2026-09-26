@@ -3,12 +3,20 @@
 #define LCDLIB_H_
 
 #include "driverlib.h"
+#include "menu_data.h"
 #include <string.h>
+
+typedef struct
+{
+    uint8_t baseAddr;    /* DDRAM address, e.g. 0x00 for FREQ, 0x40 for STATUS */
+    uint8_t fieldWidth;  /* characters, e.g. 12 for STATUS */
+} LcdField_t;
 
 // Functions
 void lcdInit();                                 // Initialize LCD
 void moveFreqCursor(void);
-void updateLCD_menu(void);
+void updateLCD_status(void);
+void LCD_WriteField(const LcdField_t *, const char *, const char *);
 
 // Delay Functions
 // Modified for an 8MHz clock
@@ -25,12 +33,6 @@ void updateLCD_menu(void);
 #define LCD_RS GPIO_PORT_P6, GPIO_PIN0
 #define LCD_CLK GPIO_PORT_P3, GPIO_PIN3
 
-
-typedef struct
-{
-    uint8_t baseAddr;    /* DDRAM address, e.g. 0x00 for FREQ, 0x40 for STATUS */
-    uint8_t fieldWidth;  /* characters, e.g. 12 for STATUS */
-} LcdField_t;
 
 
 

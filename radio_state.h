@@ -18,7 +18,7 @@ void handleHW_wpm(const  MenuItem_t *, int16_t);
 void handleHW_band(const  MenuItem_t *, int16_t);
 void handleHW_rate(const MenuItem_t *, int16_t);
 
-#define BAND_40M 0
+#define BAND_40M 0   //=> this is defined in radio_state.h because it is used by lcdLib.c
 
 typedef struct
 {
@@ -27,7 +27,8 @@ typedef struct
     uint8_t audioState;
     uint8_t wpm;  // current cw speed
     uint16_t freqMultiplier;
-    uint8_t  bandIndex;
+    uint8_t bandIndex;
+    uint8_t bandRelayCode;
 } RadioState_t;
 
 extern RadioState_t radioState;

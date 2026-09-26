@@ -12,13 +12,25 @@
 //static void selectSideband(uint8_t);
 //static void selectAudioState(uint8_t);
 
+#define FREQ_FIELD 0x00
+#define BAND_FIELD 0x0D
+#define MODE_FIELD 0x4D
+#define FREQ_FIELD_WIDTH 12
+#define BAND_FIELD_WIDTH 3
+#define MODE_FIELD_WIDTH 3
+
+static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
+static const LcdField_t fieldBand   = { BAND_FIELD, BAND_FIELD_WIDTH };
+static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
+
+
 // define rates - these numbers must match the order in the MenuItem_t definition
 #define RATE_10 10
 #define RATE_100 100
 #define RATE_1K 1000
 #define RATE_10K 10000
 // define bands - these numbers must match the order in the MenuItem_t definition
-//#define BAND_40M 0 => this is defined in radio_state.h because it is used by lcdLib.c
+// #define BAND_40M 0   //=> this is defined in radio_state.h because it is used by lcdLib.c
 #define BAND_30M 1
 #define BAND_20M 2
 #define BAND_17M 3
@@ -26,6 +38,16 @@
 
 #define MUTE 0x1
 #define UNMUTE 0x0
+
+#define RELAY_40M 0b01101001
+#define RELAY_30M 0b10100110
+#define RELAY_20M 0b10100110
+#define RELAY_17M 0b10011010
+#define RELAY_15M 0b10011010
+
+// the indexes of relayCode[] correspond to the bandIndex
+static uint8_t relayCode[] = {RELAY_40M, RELAY_30M, RELAY_20M, RELAY_17M, RELAY_15M};
+static char * bandName[] = {"40M", "30M", "20M", "17M", "15M"};
 
 RadioState_t radioState = { 0 };
 
@@ -50,82 +72,34 @@ void handleHW_wpm(const MenuItem_t *item, int16_t value)
 
 void handleHW_band(const MenuItem_t *item, int16_t value)
 {
+    //const char *result;
+    const char *suffix = NULL;
+    uint8_t index;
     //(void)item; /* unused here, but available if the callback needs
     //             * item->def.list.options[value] etc. */
     radioState.bandIndex = (uint8_t)value;
+    radioState.bandRelayCode =relayCode[(uint8_t)value];
+    // update BAND field
+    // get index of band selected
+    //result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
+    index = (uint8_t)menuCurrentValue[menuSelectedIndex];
+    LCD_WriteField(&fieldBand,bandName[index],suffix);
     //selectAudioState(MUTE);
-    /*
     switch (value)
     {
     case BAND_40M :
-        GPIO_setOutputHighOnPin(BAND_40M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_30M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_20M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_17M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_15M_SELECT);
-        si5351FreqOut = BAND_40M_LOWER;
-        si5351_set_RX_freq(si5351FreqOut);
-        si5351_set_TX_freq(si5351FreqOut);
-        selectSideband(LOWER_SIDEBAND);
-        maxBandFreq = BAND_40M_UPPER;
-        minBandFreq = BAND_40M_LOWER;
         break;
     case BAND_30M :
-        GPIO_setOutputLowOnPin(BAND_40M_SELECT);
-        GPIO_setOutputHighOnPin(BAND_30M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_20M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_17M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_15M_SELECT);
-        si5351FreqOut = BAND_30M_LOWER;
-        si5351_set_RX_freq(si5351FreqOut);
-        si5351_set_TX_freq(si5351FreqOut);
-        selectSideband(UPPER_SIDEBAND);
-        maxBandFreq = BAND_30M_UPPER;
-        minBandFreq = BAND_30M_LOWER;
         break;
     case BAND_20M :
-        GPIO_setOutputLowOnPin(BAND_40M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_30M_SELECT);
-        GPIO_setOutputHighOnPin(BAND_20M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_17M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_15M_SELECT);
-        si5351FreqOut = BAND_20M_LOWER;
-        si5351_set_RX_freq(si5351FreqOut);
-        si5351_set_TX_freq(si5351FreqOut);
-        selectSideband(UPPER_SIDEBAND);
-        maxBandFreq = BAND_20M_UPPER;
-        minBandFreq = BAND_20M_LOWER;
         break;
     case BAND_17M :
-        GPIO_setOutputLowOnPin(BAND_40M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_30M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_20M_SELECT);
-        GPIO_setOutputHighOnPin(BAND_17M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_15M_SELECT);
-        si5351FreqOut = BAND_17M_LOWER;
-        si5351_set_RX_freq(si5351FreqOut);
-        si5351_set_TX_freq(si5351FreqOut);
-        selectSideband(UPPER_SIDEBAND);
-        maxBandFreq = BAND_17M_UPPER;
-        minBandFreq = BAND_17M_LOWER;
         break;
     case BAND_15M :
-        GPIO_setOutputLowOnPin(BAND_40M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_30M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_20M_SELECT);
-        GPIO_setOutputLowOnPin(BAND_17M_SELECT);
-        GPIO_setOutputHighOnPin(BAND_15M_SELECT);
-        si5351FreqOut = BAND_15M_LOWER;
-        si5351_set_RX_freq(si5351FreqOut);
-        si5351_set_TX_freq(si5351FreqOut);
-        selectSideband(UPPER_SIDEBAND);
-        maxBandFreq = BAND_15M_UPPER;
-        minBandFreq = BAND_15M_LOWER;
         break;
     default :
         break;
     }
-    */
     /*
     // reset menu function
     ritState = DISABLED;

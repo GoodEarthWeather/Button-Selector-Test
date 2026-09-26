@@ -10,20 +10,13 @@
 static void lcdTriggerEN(void);
 static void lcdWriteData(uint8_t *);
 static void lcdWriteCmd(uint8_t);
-static void lcdClear(void);
 static void setData(uint8_t);
 static char *number_to_string(uint32_t);
 //static void LCD_WriteField(const LcdField_t *, const char *);
-static void LCD_WriteField(const LcdField_t *, const char *, const char *);
 
-#define FREQ_FIELD 0x00
-#define BAND_FIELD 0x0D
+
 #define STATUS_FIELD 0x40
-#define MODE_FIELD 0x4D
-#define FREQ_FIELD_WIDTH 12
-#define BAND_FIELD_WIDTH 3
 #define STATUS_FIELD_WIDTH 12
-#define MODE_FIELD_WIDTH 3
 // cursor positions are based on 30M, 20M, 17M and 15M bands
 // for 40M, decrement all by 1
 #define CURSOR_10 0x08
@@ -44,10 +37,10 @@ static char ritStateBuffer[16];
 */
 
 
-static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
-static const LcdField_t fieldBand   = { BAND_FIELD, BAND_FIELD_WIDTH };
+//static const LcdField_t fieldFreq   = { FREQ_FIELD, FREQ_FIELD_WIDTH };
+//static const LcdField_t fieldBand   = { BAND_FIELD, BAND_FIELD_WIDTH };
 static const LcdField_t fieldStatus = { STATUS_FIELD, STATUS_FIELD_WIDTH };
-static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
+//static const LcdField_t fieldMode = { MODE_FIELD, MODE_FIELD_WIDTH };
 
 
 void lcdInit() {
@@ -105,9 +98,6 @@ static void lcdWriteCmd(uint8_t cmd) {
         delay_us(50);
 }
 
-static void lcdClear(void) {
-	lcdWriteCmd(CLEAR);
-}
 
 // This function will take a 4 bit data nibble and split it such that the bits
 // in position 2,3 are shifted up to positions 5,6 to match the mapping of the GPIO
@@ -350,47 +340,7 @@ void updateDisplay(uint8_t field)
     moveFreqCursor();
 }
 *******************/
-/*
- * This routine will update the LCD display whenever the menu encoder
- * or the menu option encoder is rotated.  It will update the status field with the currently
- * selected option.
- */
-/********************************
-void updateLCD_menu(void)
-{
-    const char *result;
-    // first determine menu type
-    if (menuTable[menuSelectedIndex].type == MENU_TYPE_RANGE)
-    {
-        result = number_to_string((uint32_t)menuCurrentValue[menuSelectedIndex]);
-    }
-    else
-    {
-        result = menuTable[menuSelectedIndex].def.list.options[(menuCurrentValue[menuSelectedIndex])];
-    }
-    LCD_WriteField(&fieldStatus,result);
-}
-
-
-static void LCD_WriteField(const LcdField_t *field, const char *text)
-{
-    uint8_t buf[16 + 1];
-    uint8_t len = (uint8_t)strlen(text);
-
-    if (len > field->fieldWidth)
-    {
-        len = field->fieldWidth;
-    }
-
-    memset(buf, ' ', field->fieldWidth);
-    memcpy(buf, text, len);
-    buf[field->fieldWidth] = '\0';
-
-    lcdWriteCmd(0x80 | field->baseAddr);
-    lcdWriteData(buf);
-}
-***************************/
-void updateLCD_menu(void)
+void updateLCD_status(void)
 {
     const char *result;
     const char *suffix = NULL;
@@ -408,7 +358,7 @@ void updateLCD_menu(void)
     LCD_WriteField(&fieldStatus, result, suffix);
 }
 
-static void LCD_WriteField(const LcdField_t *field, const char *text, const char *suffix)
+void LCD_WriteField(const LcdField_t *field, const char *text, const char *suffix)
 {
     uint8_t buf[16 + 1];
     uint8_t len = (uint8_t)strlen(text);
